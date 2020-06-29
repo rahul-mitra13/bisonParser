@@ -1,0 +1,4371 @@
+Grammar
+
+    0 $accept: program $end
+
+    1 program: PROGRAM IDENT decl_part body
+
+    2 $@1: %empty
+
+    3 program: PROGRAM error $@1 decl_part body
+
+    4 body: BEGINN statement_list END
+    5     | BEGINN statement_list error
+
+    6 decl_part: %empty
+    7          | decl_part variable_decl
+    8          | decl_part procedure_decl
+    9          | decl_part function_decl
+
+   10 variable_decl: ident_list COLON type
+   11              | ident_list type
+   12              | IDENT ASGN type
+   13              | ident_list COLON error
+   14              | IDENT ASGN error
+
+   15 $@2: %empty
+
+   16 variable_decl: IDENT error $@2 ASGN type
+
+   17 ident_list: IDENT
+   18           | IDENT error
+   19           | ident_list COMMA IDENT
+
+   20 procedure_decl: PROCEDURE IDENT LPAREN parameter_list RPAREN decl_part body
+
+   21 $@3: %empty
+
+   22 procedure_decl: PROCEDURE IDENT LPAREN parameter_list error $@3 decl_part body
+   23               | PROCEDURE IDENT LPAREN RPAREN decl_part body
+
+   24 $@4: %empty
+
+   25 procedure_decl: PROCEDURE IDENT LPAREN error $@4 decl_part body
+   26               | PROCEDURE error
+
+   27 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN COLON simple_type decl_part body
+
+   28 $@5: %empty
+
+   29 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN COLON error $@5 decl_part body
+
+   30 $@6: %empty
+
+   31 function_decl: FUNCTION IDENT LPAREN parameter_list error $@6 simple_type decl_part body
+
+   32 $@7: %empty
+
+   33 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN error $@7 simple_type decl_part body
+   34              | FUNCTION IDENT LPAREN RPAREN COLON simple_type decl_part body
+
+   35 $@8: %empty
+
+   36 function_decl: FUNCTION IDENT LPAREN RPAREN COLON error $@8 decl_part body
+
+   37 $@9: %empty
+
+   38 function_decl: FUNCTION IDENT LPAREN error $@9 simple_type decl_part body
+
+   39 $@10: %empty
+
+   40 function_decl: FUNCTION IDENT LPAREN RPAREN error $@10 simple_type decl_part body
+   41              | FUNCTION error
+
+   42 parameter_list: ident_list_amp COLON parameter_type parameter_list_list
+
+   43 parameter_list_list: %empty
+   44                    | SEMI parameter_list
+   45                    | parameter_list
+
+   46 ident_list_amp: IDENT
+   47               | IDENT error
+   48               | AMP IDENT
+   49               | AMP IDENT error
+   50               | ident_list_amp COMMA IDENT
+   51               | ident_list_amp COMMA AMP IDENT
+
+   52 parameter_type: simple_type
+   53               | IDENT
+
+   54 type: simple_type
+   55     | IDENT
+   56     | ARRAY LBRACK index RBRACK OF type
+   57     | ARRAY LBRACK index RBRACK OF error
+
+   58 $@11: %empty
+
+   59 type: ARRAY LBRACK index error $@11 OF type
+   60     | RECORD field_list END
+
+   61 simple_type: INT
+   62            | FLOAT
+   63            | BOOL
+
+   64 index: ICONST COLON ICONST index_list
+
+   65 $@12: %empty
+
+   66 index: ICONST error $@12 ICONST index_list
+
+   67 index_list: %empty
+   68           | COMMA index
+   69           | index
+
+   70 field_list: ident_list COLON type field_list_list
+   71           | ident_list type field_list_list
+
+   72 field_list_list: %empty
+   73                | field_list
+
+   74 statement_list: %empty
+   75               | statement_list assignment_statement
+   76               | statement_list subroutine_call
+   77               | statement_list return_statement
+   78               | statement_list for_statement
+   79               | statement_list while_statement
+   80               | statement_list if_statement
+   81               | statement_list read_statement
+   82               | statement_list write_statement
+
+   83 assignment_statement: variable ASGN expression
+
+   84 $@13: %empty
+
+   85 assignment_statement: variable error $@13 expression
+
+   86 subroutine_call: IDENT LPAREN RPAREN
+   87                | IDENT LPAREN error
+   88                | IDENT LPAREN expression_list RPAREN
+   89                | IDENT LPAREN expression_list error
+
+   90 expression_list: expression
+   91                | expression_list COMMA expression
+
+   92 return_statement: RETURN expression
+
+   93 for_statement: FOR IDENT IN expression COLON expression statement_list END
+   94              | FOR IDENT IN expression COLON expression statement_list error
+
+   95 $@14: %empty
+
+   96 for_statement: FOR IDENT IN expression error $@14 expression statement_list END
+
+   97 $@15: %empty
+
+   98 for_statement: FOR error $@15 IN expression COLON expression statement_list END
+
+   99 while_statement: WHILE LPAREN expression RPAREN statement_list END
+  100                | WHILE LPAREN expression RPAREN statement_list error
+
+  101 $@16: %empty
+
+  102 while_statement: WHILE LPAREN expression error $@16 statement_list END
+
+  103 if_statement: IF LPAREN expression RPAREN THEN statement_list END
+
+  104 $@17: %empty
+
+  105 if_statement: IF LPAREN expression error $@17 THEN statement_list END
+  106             | IF LPAREN expression RPAREN THEN statement_list error
+  107             | IF LPAREN expression RPAREN THEN statement_list elif_part END
+  108             | IF LPAREN expression RPAREN THEN statement_list elif_part error
+  109             | IF LPAREN expression RPAREN THEN statement_list else_part END
+  110             | IF LPAREN expression RPAREN THEN statement_list else_part error
+  111             | IF LPAREN expression RPAREN THEN statement_list elif_part else_part END
+  112             | IF LPAREN expression RPAREN THEN statement_list elif_part else_part error
+
+  113 else_part: ELSE statement_list
+
+  114 elif_part: ELIF LPAREN expression RPAREN THEN statement_list elif_part_list
+
+  115 $@18: %empty
+
+  116 elif_part: ELIF LPAREN expression error $@18 THEN statement_list elif_part_list
+
+  117 elif_part_list: %empty
+  118               | elif_part
+
+  119 write_statement: WRITE LPAREN SCONST RPAREN
+  120                | WRITE LPAREN SCONST error
+  121                | WRITE LPAREN SCONST expression_comma_list RPAREN
+  122                | WRITE LPAREN SCONST expression_comma_list error
+
+  123 expression_comma_list: COMMA expression
+  124                      | expression_comma_list COMMA expression
+
+  125 read_statement: READ LPAREN SCONST expression_comma_list RPAREN
+  126               | READ LPAREN SCONST expression_comma_list error
+
+  127 expression: and_expression
+  128           | and_expression DBAR and_expression
+
+  129 and_expression: logic_expression
+  130               | logic_expression DAMP logic_expression
+
+  131 logic_expression: simple_expression
+  132                 | simple_expression LT simple_expression
+  133                 | simple_expression LE simple_expression
+  134                 | simple_expression EQ simple_expression
+  135                 | simple_expression NE simple_expression
+  136                 | simple_expression GE simple_expression
+  137                 | simple_expression GT simple_expression
+
+  138 simple_expression: simple_expression PLUS term
+  139                  | simple_expression MINUS term
+  140                  | PLUS term
+  141                  | MINUS term
+  142                  | term
+
+  143 term: factor
+  144     | factor factor_list
+
+  145 factor_list: STAR factor
+  146            | DIV factor
+  147            | factor_list STAR factor
+  148            | factor_list DIV factor
+
+  149 factor: constant
+  150       | variable
+  151       | subroutine_call
+  152       | LPAREN expression RPAREN
+  153       | BANG factor
+
+  154 variable: IDENT
+  155         | IDENT arrayvar
+  156         | IDENT recvar
+  157         | IDENT arrayvar recvar
+
+  158 arrayvar: LBRACK expression_list RBRACK
+  159         | LBRACK expression_list error
+
+  160 recvar: DOT variable_list
+
+  161 variable_list: variable
+  162              | recvar variable
+
+  163 constant: ICONST
+  164         | FCONST
+  165         | TRUE
+  166         | FALSE
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    error (256) 3 5 13 14 16 18 22 25 26 29 31 33 36 38 40 41 47 49 57 59 66 85 87 89 94 96 98 100 102 105 106 108 110 112 116 120 122 126 159
+    AMP (258) 48 49 51
+    ASGN (259) 12 14 16 83
+    BANG (260) 153
+    COLON (261) 10 13 27 29 34 36 42 64 70 93 94 98
+    COMMA (262) 19 50 51 68 91 123 124
+    DAMP (263) 130
+    DBAR (264) 128
+    DIV (265) 146 148
+    DOT (266) 160
+    EQ (267) 134
+    GE (268) 136
+    GT (269) 137
+    LBRACK (270) 56 57 59 158 159
+    LE (271) 133
+    LPAREN (272) 20 22 23 25 27 29 31 33 34 36 38 40 86 87 88 89 99 100 102 103 105 106 107 108 109 110 111 112 114 116 119 120 121 122 125 126 152
+    LT (273) 132
+    MINUS (274) 139 141
+    NE (275) 135
+    PLUS (276) 138 140
+    RBRACK (277) 56 57 158
+    RPAREN (278) 20 23 27 29 33 34 36 40 86 88 99 100 103 106 107 108 109 110 111 112 114 119 121 125 152
+    SEMI (279) 44
+    STAR (280) 145 147
+    ARRAY (281) 56 57 59
+    BEGINN (282) 4 5
+    BOOL (283) 63
+    ELSE (284) 113
+    ELIF (285) 114 116
+    END (286) 4 60 93 96 98 99 102 103 105 107 109 111
+    FALSE (287) 166
+    FOR (288) 93 94 96 98
+    FLOAT (289) 62
+    FUNCTION (290) 27 29 31 33 34 36 38 40 41
+    IF (291) 103 105 106 107 108 109 110 111 112
+    IN (292) 93 94 96 98
+    INT (293) 61
+    OF (294) 56 57 59
+    PROCEDURE (295) 20 22 23 25 26
+    PROGRAM (296) 1 3
+    READ (297) 125 126
+    RECORD (298) 60
+    RETURN (299) 92
+    THEN (300) 103 105 106 107 108 109 110 111 112 114 116
+    TRUE (301) 165
+    WHILE (302) 99 100 102
+    WRITE (303) 119 120 121 122
+    FCONST (304) 164
+    ICONST (305) 64 66 163
+    IDENT (306) 1 12 14 16 17 18 19 20 22 23 25 27 29 31 33 34 36 38 40 46 47 48 49 50 51 53 55 86 87 88 89 93 94 96 154 155 156 157
+    SCONST (307) 119 120 121 122 125 126
+
+
+Nonterminals, with rules where they appear
+
+    $accept (53)
+        on left: 0
+    program (54)
+        on left: 1 3
+        on right: 0
+    $@1 (55)
+        on left: 2
+        on right: 3
+    body (56)
+        on left: 4 5
+        on right: 1 3 20 22 23 25 27 29 31 33 34 36 38 40
+    decl_part (57)
+        on left: 6 7 8 9
+        on right: 1 3 7 8 9 20 22 23 25 27 29 31 33 34 36 38 40
+    variable_decl (58)
+        on left: 10 11 12 13 14 16
+        on right: 7
+    $@2 (59)
+        on left: 15
+        on right: 16
+    ident_list (60)
+        on left: 17 18 19
+        on right: 10 11 13 19 70 71
+    procedure_decl (61)
+        on left: 20 22 23 25 26
+        on right: 8
+    $@3 (62)
+        on left: 21
+        on right: 22
+    $@4 (63)
+        on left: 24
+        on right: 25
+    function_decl (64)
+        on left: 27 29 31 33 34 36 38 40 41
+        on right: 9
+    $@5 (65)
+        on left: 28
+        on right: 29
+    $@6 (66)
+        on left: 30
+        on right: 31
+    $@7 (67)
+        on left: 32
+        on right: 33
+    $@8 (68)
+        on left: 35
+        on right: 36
+    $@9 (69)
+        on left: 37
+        on right: 38
+    $@10 (70)
+        on left: 39
+        on right: 40
+    parameter_list (71)
+        on left: 42
+        on right: 20 22 27 29 31 33 44 45
+    parameter_list_list (72)
+        on left: 43 44 45
+        on right: 42
+    ident_list_amp (73)
+        on left: 46 47 48 49 50 51
+        on right: 42 50 51
+    parameter_type (74)
+        on left: 52 53
+        on right: 42
+    type (75)
+        on left: 54 55 56 57 59 60
+        on right: 10 11 12 16 56 59 70 71
+    $@11 (76)
+        on left: 58
+        on right: 59
+    simple_type (77)
+        on left: 61 62 63
+        on right: 27 31 33 34 38 40 52 54
+    index (78)
+        on left: 64 66
+        on right: 56 57 59 68 69
+    $@12 (79)
+        on left: 65
+        on right: 66
+    index_list (80)
+        on left: 67 68 69
+        on right: 64 66
+    field_list (81)
+        on left: 70 71
+        on right: 60 73
+    field_list_list (82)
+        on left: 72 73
+        on right: 70 71
+    statement_list (83)
+        on left: 74 75 76 77 78 79 80 81 82
+        on right: 4 5 75 76 77 78 79 80 81 82 93 94 96 98 99 100 102 103 105 106 107 108 109 110 111 112 113 114 116
+    assignment_statement (84)
+        on left: 83 85
+        on right: 75
+    $@13 (85)
+        on left: 84
+        on right: 85
+    subroutine_call (86)
+        on left: 86 87 88 89
+        on right: 76 151
+    expression_list (87)
+        on left: 90 91
+        on right: 88 89 91 158 159
+    return_statement (88)
+        on left: 92
+        on right: 77
+    for_statement (89)
+        on left: 93 94 96 98
+        on right: 78
+    $@14 (90)
+        on left: 95
+        on right: 96
+    $@15 (91)
+        on left: 97
+        on right: 98
+    while_statement (92)
+        on left: 99 100 102
+        on right: 79
+    $@16 (93)
+        on left: 101
+        on right: 102
+    if_statement (94)
+        on left: 103 105 106 107 108 109 110 111 112
+        on right: 80
+    $@17 (95)
+        on left: 104
+        on right: 105
+    else_part (96)
+        on left: 113
+        on right: 109 110 111 112
+    elif_part (97)
+        on left: 114 116
+        on right: 107 108 111 112 118
+    $@18 (98)
+        on left: 115
+        on right: 116
+    elif_part_list (99)
+        on left: 117 118
+        on right: 114 116
+    write_statement (100)
+        on left: 119 120 121 122
+        on right: 82
+    expression_comma_list (101)
+        on left: 123 124
+        on right: 121 122 124 125 126
+    read_statement (102)
+        on left: 125 126
+        on right: 81
+    expression (103)
+        on left: 127 128
+        on right: 83 85 90 91 92 93 94 96 98 99 100 102 103 105 106 107 108 109 110 111 112 114 116 123 124 152
+    and_expression (104)
+        on left: 129 130
+        on right: 127 128
+    logic_expression (105)
+        on left: 131 132 133 134 135 136 137
+        on right: 129 130
+    simple_expression (106)
+        on left: 138 139 140 141 142
+        on right: 131 132 133 134 135 136 137 138 139
+    term (107)
+        on left: 143 144
+        on right: 138 139 140 141 142
+    factor_list (108)
+        on left: 145 146 147 148
+        on right: 144 147 148
+    factor (109)
+        on left: 149 150 151 152 153
+        on right: 143 144 145 146 147 148 153
+    variable (110)
+        on left: 154 155 156 157
+        on right: 83 85 150 161 162
+    arrayvar (111)
+        on left: 158 159
+        on right: 155 157
+    recvar (112)
+        on left: 160
+        on right: 156 157 162
+    variable_list (113)
+        on left: 161 162
+        on right: 160
+    constant (114)
+        on left: 163 164 165 166
+        on right: 149
+
+
+State 0
+
+    0 $accept: . program $end
+
+    PROGRAM  shift, and go to state 1
+
+    program  go to state 2
+
+
+State 1
+
+    1 program: PROGRAM . IDENT decl_part body
+    3        | PROGRAM . error $@1 decl_part body
+
+    error  shift, and go to state 3
+    IDENT  shift, and go to state 4
+
+
+State 2
+
+    0 $accept: program . $end
+
+    $end  shift, and go to state 5
+
+
+State 3
+
+    3 program: PROGRAM error . $@1 decl_part body
+
+    $default  reduce using rule 2 ($@1)
+
+    $@1  go to state 6
+
+
+State 4
+
+    1 program: PROGRAM IDENT . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 7
+
+
+State 5
+
+    0 $accept: program $end .
+
+    $default  accept
+
+
+State 6
+
+    3 program: PROGRAM error $@1 . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 8
+
+
+State 7
+
+    1 program: PROGRAM IDENT decl_part . body
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 13
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 8
+
+    3 program: PROGRAM error $@1 decl_part . body
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 18
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 9
+
+    4 body: BEGINN . statement_list END
+    5     | BEGINN . statement_list error
+
+    $default  reduce using rule 74 (statement_list)
+
+    statement_list  go to state 19
+
+
+State 10
+
+   27 function_decl: FUNCTION . IDENT LPAREN parameter_list RPAREN COLON simple_type decl_part body
+   29              | FUNCTION . IDENT LPAREN parameter_list RPAREN COLON error $@5 decl_part body
+   31              | FUNCTION . IDENT LPAREN parameter_list error $@6 simple_type decl_part body
+   33              | FUNCTION . IDENT LPAREN parameter_list RPAREN error $@7 simple_type decl_part body
+   34              | FUNCTION . IDENT LPAREN RPAREN COLON simple_type decl_part body
+   36              | FUNCTION . IDENT LPAREN RPAREN COLON error $@8 decl_part body
+   38              | FUNCTION . IDENT LPAREN error $@9 simple_type decl_part body
+   40              | FUNCTION . IDENT LPAREN RPAREN error $@10 simple_type decl_part body
+   41              | FUNCTION . error
+
+    error  shift, and go to state 20
+    IDENT  shift, and go to state 21
+
+
+State 11
+
+   20 procedure_decl: PROCEDURE . IDENT LPAREN parameter_list RPAREN decl_part body
+   22               | PROCEDURE . IDENT LPAREN parameter_list error $@3 decl_part body
+   23               | PROCEDURE . IDENT LPAREN RPAREN decl_part body
+   25               | PROCEDURE . IDENT LPAREN error $@4 decl_part body
+   26               | PROCEDURE . error
+
+    error  shift, and go to state 22
+    IDENT  shift, and go to state 23
+
+
+State 12
+
+   12 variable_decl: IDENT . ASGN type
+   14              | IDENT . ASGN error
+   16              | IDENT . error $@2 ASGN type
+   17 ident_list: IDENT .
+   18           | IDENT . error
+
+    error  shift, and go to state 24
+    ASGN   shift, and go to state 25
+
+    COLON   reduce using rule 17 (ident_list)
+    COMMA   reduce using rule 17 (ident_list)
+    ARRAY   reduce using rule 17 (ident_list)
+    BOOL    reduce using rule 17 (ident_list)
+    FLOAT   reduce using rule 17 (ident_list)
+    INT     reduce using rule 17 (ident_list)
+    RECORD  reduce using rule 17 (ident_list)
+    IDENT   reduce using rule 17 (ident_list)
+
+
+State 13
+
+    1 program: PROGRAM IDENT decl_part body .
+
+    $default  reduce using rule 1 (program)
+
+
+State 14
+
+    7 decl_part: decl_part variable_decl .
+
+    $default  reduce using rule 7 (decl_part)
+
+
+State 15
+
+   10 variable_decl: ident_list . COLON type
+   11              | ident_list . type
+   13              | ident_list . COLON error
+   19 ident_list: ident_list . COMMA IDENT
+
+    COLON   shift, and go to state 26
+    COMMA   shift, and go to state 27
+    ARRAY   shift, and go to state 28
+    BOOL    shift, and go to state 29
+    FLOAT   shift, and go to state 30
+    INT     shift, and go to state 31
+    RECORD  shift, and go to state 32
+    IDENT   shift, and go to state 33
+
+    type         go to state 34
+    simple_type  go to state 35
+
+
+State 16
+
+    8 decl_part: decl_part procedure_decl .
+
+    $default  reduce using rule 8 (decl_part)
+
+
+State 17
+
+    9 decl_part: decl_part function_decl .
+
+    $default  reduce using rule 9 (decl_part)
+
+
+State 18
+
+    3 program: PROGRAM error $@1 decl_part body .
+
+    $default  reduce using rule 3 (program)
+
+
+State 19
+
+    4 body: BEGINN statement_list . END
+    5     | BEGINN statement_list . error
+   75 statement_list: statement_list . assignment_statement
+   76               | statement_list . subroutine_call
+   77               | statement_list . return_statement
+   78               | statement_list . for_statement
+   79               | statement_list . while_statement
+   80               | statement_list . if_statement
+   81               | statement_list . read_statement
+   82               | statement_list . write_statement
+
+    error   shift, and go to state 36
+    END     shift, and go to state 37
+    FOR     shift, and go to state 38
+    IF      shift, and go to state 39
+    READ    shift, and go to state 40
+    RETURN  shift, and go to state 41
+    WHILE   shift, and go to state 42
+    WRITE   shift, and go to state 43
+    IDENT   shift, and go to state 44
+
+    assignment_statement  go to state 45
+    subroutine_call       go to state 46
+    return_statement      go to state 47
+    for_statement         go to state 48
+    while_statement       go to state 49
+    if_statement          go to state 50
+    write_statement       go to state 51
+    read_statement        go to state 52
+    variable              go to state 53
+
+
+State 20
+
+   41 function_decl: FUNCTION error .
+
+    $default  reduce using rule 41 (function_decl)
+
+
+State 21
+
+   27 function_decl: FUNCTION IDENT . LPAREN parameter_list RPAREN COLON simple_type decl_part body
+   29              | FUNCTION IDENT . LPAREN parameter_list RPAREN COLON error $@5 decl_part body
+   31              | FUNCTION IDENT . LPAREN parameter_list error $@6 simple_type decl_part body
+   33              | FUNCTION IDENT . LPAREN parameter_list RPAREN error $@7 simple_type decl_part body
+   34              | FUNCTION IDENT . LPAREN RPAREN COLON simple_type decl_part body
+   36              | FUNCTION IDENT . LPAREN RPAREN COLON error $@8 decl_part body
+   38              | FUNCTION IDENT . LPAREN error $@9 simple_type decl_part body
+   40              | FUNCTION IDENT . LPAREN RPAREN error $@10 simple_type decl_part body
+
+    LPAREN  shift, and go to state 54
+
+
+State 22
+
+   26 procedure_decl: PROCEDURE error .
+
+    $default  reduce using rule 26 (procedure_decl)
+
+
+State 23
+
+   20 procedure_decl: PROCEDURE IDENT . LPAREN parameter_list RPAREN decl_part body
+   22               | PROCEDURE IDENT . LPAREN parameter_list error $@3 decl_part body
+   23               | PROCEDURE IDENT . LPAREN RPAREN decl_part body
+   25               | PROCEDURE IDENT . LPAREN error $@4 decl_part body
+
+    LPAREN  shift, and go to state 55
+
+
+State 24
+
+   16 variable_decl: IDENT error . $@2 ASGN type
+   18 ident_list: IDENT error .
+
+    ASGN      reduce using rule 15 ($@2)
+    $default  reduce using rule 18 (ident_list)
+
+    $@2  go to state 56
+
+
+State 25
+
+   12 variable_decl: IDENT ASGN . type
+   14              | IDENT ASGN . error
+
+    error   shift, and go to state 57
+    ARRAY   shift, and go to state 28
+    BOOL    shift, and go to state 29
+    FLOAT   shift, and go to state 30
+    INT     shift, and go to state 31
+    RECORD  shift, and go to state 32
+    IDENT   shift, and go to state 33
+
+    type         go to state 58
+    simple_type  go to state 35
+
+
+State 26
+
+   10 variable_decl: ident_list COLON . type
+   13              | ident_list COLON . error
+
+    error   shift, and go to state 59
+    ARRAY   shift, and go to state 28
+    BOOL    shift, and go to state 29
+    FLOAT   shift, and go to state 30
+    INT     shift, and go to state 31
+    RECORD  shift, and go to state 32
+    IDENT   shift, and go to state 33
+
+    type         go to state 60
+    simple_type  go to state 35
+
+
+State 27
+
+   19 ident_list: ident_list COMMA . IDENT
+
+    IDENT  shift, and go to state 61
+
+
+State 28
+
+   56 type: ARRAY . LBRACK index RBRACK OF type
+   57     | ARRAY . LBRACK index RBRACK OF error
+   59     | ARRAY . LBRACK index error $@11 OF type
+
+    LBRACK  shift, and go to state 62
+
+
+State 29
+
+   63 simple_type: BOOL .
+
+    $default  reduce using rule 63 (simple_type)
+
+
+State 30
+
+   62 simple_type: FLOAT .
+
+    $default  reduce using rule 62 (simple_type)
+
+
+State 31
+
+   61 simple_type: INT .
+
+    $default  reduce using rule 61 (simple_type)
+
+
+State 32
+
+   60 type: RECORD . field_list END
+
+    IDENT  shift, and go to state 63
+
+    ident_list  go to state 64
+    field_list  go to state 65
+
+
+State 33
+
+   55 type: IDENT .
+
+    $default  reduce using rule 55 (type)
+
+
+State 34
+
+   11 variable_decl: ident_list type .
+
+    $default  reduce using rule 11 (variable_decl)
+
+
+State 35
+
+   54 type: simple_type .
+
+    $default  reduce using rule 54 (type)
+
+
+State 36
+
+    5 body: BEGINN statement_list error .
+
+    $default  reduce using rule 5 (body)
+
+
+State 37
+
+    4 body: BEGINN statement_list END .
+
+    $default  reduce using rule 4 (body)
+
+
+State 38
+
+   93 for_statement: FOR . IDENT IN expression COLON expression statement_list END
+   94              | FOR . IDENT IN expression COLON expression statement_list error
+   96              | FOR . IDENT IN expression error $@14 expression statement_list END
+   98              | FOR . error $@15 IN expression COLON expression statement_list END
+
+    error  shift, and go to state 66
+    IDENT  shift, and go to state 67
+
+
+State 39
+
+  103 if_statement: IF . LPAREN expression RPAREN THEN statement_list END
+  105             | IF . LPAREN expression error $@17 THEN statement_list END
+  106             | IF . LPAREN expression RPAREN THEN statement_list error
+  107             | IF . LPAREN expression RPAREN THEN statement_list elif_part END
+  108             | IF . LPAREN expression RPAREN THEN statement_list elif_part error
+  109             | IF . LPAREN expression RPAREN THEN statement_list else_part END
+  110             | IF . LPAREN expression RPAREN THEN statement_list else_part error
+  111             | IF . LPAREN expression RPAREN THEN statement_list elif_part else_part END
+  112             | IF . LPAREN expression RPAREN THEN statement_list elif_part else_part error
+
+    LPAREN  shift, and go to state 68
+
+
+State 40
+
+  125 read_statement: READ . LPAREN SCONST expression_comma_list RPAREN
+  126               | READ . LPAREN SCONST expression_comma_list error
+
+    LPAREN  shift, and go to state 69
+
+
+State 41
+
+   92 return_statement: RETURN . expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 79
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 42
+
+   99 while_statement: WHILE . LPAREN expression RPAREN statement_list END
+  100                | WHILE . LPAREN expression RPAREN statement_list error
+  102                | WHILE . LPAREN expression error $@16 statement_list END
+
+    LPAREN  shift, and go to state 87
+
+
+State 43
+
+  119 write_statement: WRITE . LPAREN SCONST RPAREN
+  120                | WRITE . LPAREN SCONST error
+  121                | WRITE . LPAREN SCONST expression_comma_list RPAREN
+  122                | WRITE . LPAREN SCONST expression_comma_list error
+
+    LPAREN  shift, and go to state 88
+
+
+State 44
+
+   86 subroutine_call: IDENT . LPAREN RPAREN
+   87                | IDENT . LPAREN error
+   88                | IDENT . LPAREN expression_list RPAREN
+   89                | IDENT . LPAREN expression_list error
+  154 variable: IDENT .
+  155         | IDENT . arrayvar
+  156         | IDENT . recvar
+  157         | IDENT . arrayvar recvar
+
+    DOT     shift, and go to state 89
+    LBRACK  shift, and go to state 90
+    LPAREN  shift, and go to state 91
+
+    $default  reduce using rule 154 (variable)
+
+    arrayvar  go to state 92
+    recvar    go to state 93
+
+
+State 45
+
+   75 statement_list: statement_list assignment_statement .
+
+    $default  reduce using rule 75 (statement_list)
+
+
+State 46
+
+   76 statement_list: statement_list subroutine_call .
+
+    $default  reduce using rule 76 (statement_list)
+
+
+State 47
+
+   77 statement_list: statement_list return_statement .
+
+    $default  reduce using rule 77 (statement_list)
+
+
+State 48
+
+   78 statement_list: statement_list for_statement .
+
+    $default  reduce using rule 78 (statement_list)
+
+
+State 49
+
+   79 statement_list: statement_list while_statement .
+
+    $default  reduce using rule 79 (statement_list)
+
+
+State 50
+
+   80 statement_list: statement_list if_statement .
+
+    $default  reduce using rule 80 (statement_list)
+
+
+State 51
+
+   82 statement_list: statement_list write_statement .
+
+    $default  reduce using rule 82 (statement_list)
+
+
+State 52
+
+   81 statement_list: statement_list read_statement .
+
+    $default  reduce using rule 81 (statement_list)
+
+
+State 53
+
+   83 assignment_statement: variable . ASGN expression
+   85                     | variable . error $@13 expression
+
+    error  shift, and go to state 94
+    ASGN   shift, and go to state 95
+
+
+State 54
+
+   27 function_decl: FUNCTION IDENT LPAREN . parameter_list RPAREN COLON simple_type decl_part body
+   29              | FUNCTION IDENT LPAREN . parameter_list RPAREN COLON error $@5 decl_part body
+   31              | FUNCTION IDENT LPAREN . parameter_list error $@6 simple_type decl_part body
+   33              | FUNCTION IDENT LPAREN . parameter_list RPAREN error $@7 simple_type decl_part body
+   34              | FUNCTION IDENT LPAREN . RPAREN COLON simple_type decl_part body
+   36              | FUNCTION IDENT LPAREN . RPAREN COLON error $@8 decl_part body
+   38              | FUNCTION IDENT LPAREN . error $@9 simple_type decl_part body
+   40              | FUNCTION IDENT LPAREN . RPAREN error $@10 simple_type decl_part body
+
+    error   shift, and go to state 96
+    AMP     shift, and go to state 97
+    RPAREN  shift, and go to state 98
+    IDENT   shift, and go to state 99
+
+    parameter_list  go to state 100
+    ident_list_amp  go to state 101
+
+
+State 55
+
+   20 procedure_decl: PROCEDURE IDENT LPAREN . parameter_list RPAREN decl_part body
+   22               | PROCEDURE IDENT LPAREN . parameter_list error $@3 decl_part body
+   23               | PROCEDURE IDENT LPAREN . RPAREN decl_part body
+   25               | PROCEDURE IDENT LPAREN . error $@4 decl_part body
+
+    error   shift, and go to state 102
+    AMP     shift, and go to state 97
+    RPAREN  shift, and go to state 103
+    IDENT   shift, and go to state 99
+
+    parameter_list  go to state 104
+    ident_list_amp  go to state 101
+
+
+State 56
+
+   16 variable_decl: IDENT error $@2 . ASGN type
+
+    ASGN  shift, and go to state 105
+
+
+State 57
+
+   14 variable_decl: IDENT ASGN error .
+
+    $default  reduce using rule 14 (variable_decl)
+
+
+State 58
+
+   12 variable_decl: IDENT ASGN type .
+
+    $default  reduce using rule 12 (variable_decl)
+
+
+State 59
+
+   13 variable_decl: ident_list COLON error .
+
+    $default  reduce using rule 13 (variable_decl)
+
+
+State 60
+
+   10 variable_decl: ident_list COLON type .
+
+    $default  reduce using rule 10 (variable_decl)
+
+
+State 61
+
+   19 ident_list: ident_list COMMA IDENT .
+
+    $default  reduce using rule 19 (ident_list)
+
+
+State 62
+
+   56 type: ARRAY LBRACK . index RBRACK OF type
+   57     | ARRAY LBRACK . index RBRACK OF error
+   59     | ARRAY LBRACK . index error $@11 OF type
+
+    ICONST  shift, and go to state 106
+
+    index  go to state 107
+
+
+State 63
+
+   17 ident_list: IDENT .
+   18           | IDENT . error
+
+    error  shift, and go to state 108
+
+    COLON   reduce using rule 17 (ident_list)
+    COMMA   reduce using rule 17 (ident_list)
+    ARRAY   reduce using rule 17 (ident_list)
+    BOOL    reduce using rule 17 (ident_list)
+    FLOAT   reduce using rule 17 (ident_list)
+    INT     reduce using rule 17 (ident_list)
+    RECORD  reduce using rule 17 (ident_list)
+    IDENT   reduce using rule 17 (ident_list)
+
+
+State 64
+
+   19 ident_list: ident_list . COMMA IDENT
+   70 field_list: ident_list . COLON type field_list_list
+   71           | ident_list . type field_list_list
+
+    COLON   shift, and go to state 109
+    COMMA   shift, and go to state 27
+    ARRAY   shift, and go to state 28
+    BOOL    shift, and go to state 29
+    FLOAT   shift, and go to state 30
+    INT     shift, and go to state 31
+    RECORD  shift, and go to state 32
+    IDENT   shift, and go to state 33
+
+    type         go to state 110
+    simple_type  go to state 35
+
+
+State 65
+
+   60 type: RECORD field_list . END
+
+    END  shift, and go to state 111
+
+
+State 66
+
+   98 for_statement: FOR error . $@15 IN expression COLON expression statement_list END
+
+    $default  reduce using rule 97 ($@15)
+
+    $@15  go to state 112
+
+
+State 67
+
+   93 for_statement: FOR IDENT . IN expression COLON expression statement_list END
+   94              | FOR IDENT . IN expression COLON expression statement_list error
+   96              | FOR IDENT . IN expression error $@14 expression statement_list END
+
+    IN  shift, and go to state 113
+
+
+State 68
+
+  103 if_statement: IF LPAREN . expression RPAREN THEN statement_list END
+  105             | IF LPAREN . expression error $@17 THEN statement_list END
+  106             | IF LPAREN . expression RPAREN THEN statement_list error
+  107             | IF LPAREN . expression RPAREN THEN statement_list elif_part END
+  108             | IF LPAREN . expression RPAREN THEN statement_list elif_part error
+  109             | IF LPAREN . expression RPAREN THEN statement_list else_part END
+  110             | IF LPAREN . expression RPAREN THEN statement_list else_part error
+  111             | IF LPAREN . expression RPAREN THEN statement_list elif_part else_part END
+  112             | IF LPAREN . expression RPAREN THEN statement_list elif_part else_part error
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 114
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 69
+
+  125 read_statement: READ LPAREN . SCONST expression_comma_list RPAREN
+  126               | READ LPAREN . SCONST expression_comma_list error
+
+    SCONST  shift, and go to state 115
+
+
+State 70
+
+  153 factor: BANG . factor
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call  go to state 78
+    factor           go to state 116
+    variable         go to state 85
+    constant         go to state 86
+
+
+State 71
+
+  152 factor: LPAREN . expression RPAREN
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 117
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 72
+
+  141 simple_expression: MINUS . term
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call  go to state 78
+    term             go to state 118
+    factor           go to state 84
+    variable         go to state 85
+    constant         go to state 86
+
+
+State 73
+
+  140 simple_expression: PLUS . term
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call  go to state 78
+    term             go to state 119
+    factor           go to state 84
+    variable         go to state 85
+    constant         go to state 86
+
+
+State 74
+
+  166 constant: FALSE .
+
+    $default  reduce using rule 166 (constant)
+
+
+State 75
+
+  165 constant: TRUE .
+
+    $default  reduce using rule 165 (constant)
+
+
+State 76
+
+  164 constant: FCONST .
+
+    $default  reduce using rule 164 (constant)
+
+
+State 77
+
+  163 constant: ICONST .
+
+    $default  reduce using rule 163 (constant)
+
+
+State 78
+
+  151 factor: subroutine_call .
+
+    $default  reduce using rule 151 (factor)
+
+
+State 79
+
+   92 return_statement: RETURN expression .
+
+    $default  reduce using rule 92 (return_statement)
+
+
+State 80
+
+  127 expression: and_expression .
+  128           | and_expression . DBAR and_expression
+
+    DBAR  shift, and go to state 120
+
+    $default  reduce using rule 127 (expression)
+
+
+State 81
+
+  129 and_expression: logic_expression .
+  130               | logic_expression . DAMP logic_expression
+
+    DAMP  shift, and go to state 121
+
+    $default  reduce using rule 129 (and_expression)
+
+
+State 82
+
+  131 logic_expression: simple_expression .
+  132                 | simple_expression . LT simple_expression
+  133                 | simple_expression . LE simple_expression
+  134                 | simple_expression . EQ simple_expression
+  135                 | simple_expression . NE simple_expression
+  136                 | simple_expression . GE simple_expression
+  137                 | simple_expression . GT simple_expression
+  138 simple_expression: simple_expression . PLUS term
+  139                  | simple_expression . MINUS term
+
+    EQ     shift, and go to state 122
+    GE     shift, and go to state 123
+    GT     shift, and go to state 124
+    LE     shift, and go to state 125
+    LT     shift, and go to state 126
+    MINUS  shift, and go to state 127
+    NE     shift, and go to state 128
+    PLUS   shift, and go to state 129
+
+    $default  reduce using rule 131 (logic_expression)
+
+
+State 83
+
+  142 simple_expression: term .
+
+    $default  reduce using rule 142 (simple_expression)
+
+
+State 84
+
+  143 term: factor .
+  144     | factor . factor_list
+
+    DIV   shift, and go to state 130
+    STAR  shift, and go to state 131
+
+    $default  reduce using rule 143 (term)
+
+    factor_list  go to state 132
+
+
+State 85
+
+  150 factor: variable .
+
+    $default  reduce using rule 150 (factor)
+
+
+State 86
+
+  149 factor: constant .
+
+    $default  reduce using rule 149 (factor)
+
+
+State 87
+
+   99 while_statement: WHILE LPAREN . expression RPAREN statement_list END
+  100                | WHILE LPAREN . expression RPAREN statement_list error
+  102                | WHILE LPAREN . expression error $@16 statement_list END
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 133
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 88
+
+  119 write_statement: WRITE LPAREN . SCONST RPAREN
+  120                | WRITE LPAREN . SCONST error
+  121                | WRITE LPAREN . SCONST expression_comma_list RPAREN
+  122                | WRITE LPAREN . SCONST expression_comma_list error
+
+    SCONST  shift, and go to state 134
+
+
+State 89
+
+  160 recvar: DOT . variable_list
+
+    DOT    shift, and go to state 89
+    IDENT  shift, and go to state 135
+
+    variable       go to state 136
+    recvar         go to state 137
+    variable_list  go to state 138
+
+
+State 90
+
+  158 arrayvar: LBRACK . expression_list RBRACK
+  159         | LBRACK . expression_list error
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression_list    go to state 139
+    expression         go to state 140
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 91
+
+   86 subroutine_call: IDENT LPAREN . RPAREN
+   87                | IDENT LPAREN . error
+   88                | IDENT LPAREN . expression_list RPAREN
+   89                | IDENT LPAREN . expression_list error
+
+    error   shift, and go to state 141
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    RPAREN  shift, and go to state 142
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression_list    go to state 143
+    expression         go to state 140
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 92
+
+  155 variable: IDENT arrayvar .
+  157         | IDENT arrayvar . recvar
+
+    DOT  shift, and go to state 89
+
+    $default  reduce using rule 155 (variable)
+
+    recvar  go to state 144
+
+
+State 93
+
+  156 variable: IDENT recvar .
+
+    $default  reduce using rule 156 (variable)
+
+
+State 94
+
+   85 assignment_statement: variable error . $@13 expression
+
+    $default  reduce using rule 84 ($@13)
+
+    $@13  go to state 145
+
+
+State 95
+
+   83 assignment_statement: variable ASGN . expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 146
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 96
+
+   38 function_decl: FUNCTION IDENT LPAREN error . $@9 simple_type decl_part body
+
+    $default  reduce using rule 37 ($@9)
+
+    $@9  go to state 147
+
+
+State 97
+
+   48 ident_list_amp: AMP . IDENT
+   49               | AMP . IDENT error
+
+    IDENT  shift, and go to state 148
+
+
+State 98
+
+   34 function_decl: FUNCTION IDENT LPAREN RPAREN . COLON simple_type decl_part body
+   36              | FUNCTION IDENT LPAREN RPAREN . COLON error $@8 decl_part body
+   40              | FUNCTION IDENT LPAREN RPAREN . error $@10 simple_type decl_part body
+
+    error  shift, and go to state 149
+    COLON  shift, and go to state 150
+
+
+State 99
+
+   46 ident_list_amp: IDENT .
+   47               | IDENT . error
+
+    error  shift, and go to state 151
+
+    COLON  reduce using rule 46 (ident_list_amp)
+    COMMA  reduce using rule 46 (ident_list_amp)
+
+
+State 100
+
+   27 function_decl: FUNCTION IDENT LPAREN parameter_list . RPAREN COLON simple_type decl_part body
+   29              | FUNCTION IDENT LPAREN parameter_list . RPAREN COLON error $@5 decl_part body
+   31              | FUNCTION IDENT LPAREN parameter_list . error $@6 simple_type decl_part body
+   33              | FUNCTION IDENT LPAREN parameter_list . RPAREN error $@7 simple_type decl_part body
+
+    error   shift, and go to state 152
+    RPAREN  shift, and go to state 153
+
+
+State 101
+
+   42 parameter_list: ident_list_amp . COLON parameter_type parameter_list_list
+   50 ident_list_amp: ident_list_amp . COMMA IDENT
+   51               | ident_list_amp . COMMA AMP IDENT
+
+    COLON  shift, and go to state 154
+    COMMA  shift, and go to state 155
+
+
+State 102
+
+   25 procedure_decl: PROCEDURE IDENT LPAREN error . $@4 decl_part body
+
+    $default  reduce using rule 24 ($@4)
+
+    $@4  go to state 156
+
+
+State 103
+
+   23 procedure_decl: PROCEDURE IDENT LPAREN RPAREN . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 157
+
+
+State 104
+
+   20 procedure_decl: PROCEDURE IDENT LPAREN parameter_list . RPAREN decl_part body
+   22               | PROCEDURE IDENT LPAREN parameter_list . error $@3 decl_part body
+
+    error   shift, and go to state 158
+    RPAREN  shift, and go to state 159
+
+
+State 105
+
+   16 variable_decl: IDENT error $@2 ASGN . type
+
+    ARRAY   shift, and go to state 28
+    BOOL    shift, and go to state 29
+    FLOAT   shift, and go to state 30
+    INT     shift, and go to state 31
+    RECORD  shift, and go to state 32
+    IDENT   shift, and go to state 33
+
+    type         go to state 160
+    simple_type  go to state 35
+
+
+State 106
+
+   64 index: ICONST . COLON ICONST index_list
+   66      | ICONST . error $@12 ICONST index_list
+
+    error  shift, and go to state 161
+    COLON  shift, and go to state 162
+
+
+State 107
+
+   56 type: ARRAY LBRACK index . RBRACK OF type
+   57     | ARRAY LBRACK index . RBRACK OF error
+   59     | ARRAY LBRACK index . error $@11 OF type
+
+    error   shift, and go to state 163
+    RBRACK  shift, and go to state 164
+
+
+State 108
+
+   18 ident_list: IDENT error .
+
+    $default  reduce using rule 18 (ident_list)
+
+
+State 109
+
+   70 field_list: ident_list COLON . type field_list_list
+
+    ARRAY   shift, and go to state 28
+    BOOL    shift, and go to state 29
+    FLOAT   shift, and go to state 30
+    INT     shift, and go to state 31
+    RECORD  shift, and go to state 32
+    IDENT   shift, and go to state 33
+
+    type         go to state 165
+    simple_type  go to state 35
+
+
+State 110
+
+   71 field_list: ident_list type . field_list_list
+
+    IDENT  shift, and go to state 63
+
+    $default  reduce using rule 72 (field_list_list)
+
+    ident_list       go to state 64
+    field_list       go to state 166
+    field_list_list  go to state 167
+
+
+State 111
+
+   60 type: RECORD field_list END .
+
+    $default  reduce using rule 60 (type)
+
+
+State 112
+
+   98 for_statement: FOR error $@15 . IN expression COLON expression statement_list END
+
+    IN  shift, and go to state 168
+
+
+State 113
+
+   93 for_statement: FOR IDENT IN . expression COLON expression statement_list END
+   94              | FOR IDENT IN . expression COLON expression statement_list error
+   96              | FOR IDENT IN . expression error $@14 expression statement_list END
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 169
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 114
+
+  103 if_statement: IF LPAREN expression . RPAREN THEN statement_list END
+  105             | IF LPAREN expression . error $@17 THEN statement_list END
+  106             | IF LPAREN expression . RPAREN THEN statement_list error
+  107             | IF LPAREN expression . RPAREN THEN statement_list elif_part END
+  108             | IF LPAREN expression . RPAREN THEN statement_list elif_part error
+  109             | IF LPAREN expression . RPAREN THEN statement_list else_part END
+  110             | IF LPAREN expression . RPAREN THEN statement_list else_part error
+  111             | IF LPAREN expression . RPAREN THEN statement_list elif_part else_part END
+  112             | IF LPAREN expression . RPAREN THEN statement_list elif_part else_part error
+
+    error   shift, and go to state 170
+    RPAREN  shift, and go to state 171
+
+
+State 115
+
+  125 read_statement: READ LPAREN SCONST . expression_comma_list RPAREN
+  126               | READ LPAREN SCONST . expression_comma_list error
+
+    COMMA  shift, and go to state 172
+
+    expression_comma_list  go to state 173
+
+
+State 116
+
+  153 factor: BANG factor .
+
+    $default  reduce using rule 153 (factor)
+
+
+State 117
+
+  152 factor: LPAREN expression . RPAREN
+
+    RPAREN  shift, and go to state 174
+
+
+State 118
+
+  141 simple_expression: MINUS term .
+
+    $default  reduce using rule 141 (simple_expression)
+
+
+State 119
+
+  140 simple_expression: PLUS term .
+
+    $default  reduce using rule 140 (simple_expression)
+
+
+State 120
+
+  128 expression: and_expression DBAR . and_expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    and_expression     go to state 175
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 121
+
+  130 and_expression: logic_expression DAMP . logic_expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    logic_expression   go to state 176
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 122
+
+  134 logic_expression: simple_expression EQ . simple_expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    simple_expression  go to state 177
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 123
+
+  136 logic_expression: simple_expression GE . simple_expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    simple_expression  go to state 178
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 124
+
+  137 logic_expression: simple_expression GT . simple_expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    simple_expression  go to state 179
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 125
+
+  133 logic_expression: simple_expression LE . simple_expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    simple_expression  go to state 180
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 126
+
+  132 logic_expression: simple_expression LT . simple_expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    simple_expression  go to state 181
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 127
+
+  139 simple_expression: simple_expression MINUS . term
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call  go to state 78
+    term             go to state 182
+    factor           go to state 84
+    variable         go to state 85
+    constant         go to state 86
+
+
+State 128
+
+  135 logic_expression: simple_expression NE . simple_expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    simple_expression  go to state 183
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 129
+
+  138 simple_expression: simple_expression PLUS . term
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call  go to state 78
+    term             go to state 184
+    factor           go to state 84
+    variable         go to state 85
+    constant         go to state 86
+
+
+State 130
+
+  146 factor_list: DIV . factor
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call  go to state 78
+    factor           go to state 185
+    variable         go to state 85
+    constant         go to state 86
+
+
+State 131
+
+  145 factor_list: STAR . factor
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call  go to state 78
+    factor           go to state 186
+    variable         go to state 85
+    constant         go to state 86
+
+
+State 132
+
+  144 term: factor factor_list .
+  147 factor_list: factor_list . STAR factor
+  148            | factor_list . DIV factor
+
+    DIV   shift, and go to state 187
+    STAR  shift, and go to state 188
+
+    $default  reduce using rule 144 (term)
+
+
+State 133
+
+   99 while_statement: WHILE LPAREN expression . RPAREN statement_list END
+  100                | WHILE LPAREN expression . RPAREN statement_list error
+  102                | WHILE LPAREN expression . error $@16 statement_list END
+
+    error   shift, and go to state 189
+    RPAREN  shift, and go to state 190
+
+
+State 134
+
+  119 write_statement: WRITE LPAREN SCONST . RPAREN
+  120                | WRITE LPAREN SCONST . error
+  121                | WRITE LPAREN SCONST . expression_comma_list RPAREN
+  122                | WRITE LPAREN SCONST . expression_comma_list error
+
+    error   shift, and go to state 191
+    COMMA   shift, and go to state 172
+    RPAREN  shift, and go to state 192
+
+    expression_comma_list  go to state 193
+
+
+State 135
+
+  154 variable: IDENT .
+  155         | IDENT . arrayvar
+  156         | IDENT . recvar
+  157         | IDENT . arrayvar recvar
+
+    DOT     shift, and go to state 89
+    LBRACK  shift, and go to state 90
+
+    $default  reduce using rule 154 (variable)
+
+    arrayvar  go to state 92
+    recvar    go to state 93
+
+
+State 136
+
+  161 variable_list: variable .
+
+    $default  reduce using rule 161 (variable_list)
+
+
+State 137
+
+  162 variable_list: recvar . variable
+
+    IDENT  shift, and go to state 135
+
+    variable  go to state 194
+
+
+State 138
+
+  160 recvar: DOT variable_list .
+
+    $default  reduce using rule 160 (recvar)
+
+
+State 139
+
+   91 expression_list: expression_list . COMMA expression
+  158 arrayvar: LBRACK expression_list . RBRACK
+  159         | LBRACK expression_list . error
+
+    error   shift, and go to state 195
+    COMMA   shift, and go to state 196
+    RBRACK  shift, and go to state 197
+
+
+State 140
+
+   90 expression_list: expression .
+
+    $default  reduce using rule 90 (expression_list)
+
+
+State 141
+
+   87 subroutine_call: IDENT LPAREN error .
+
+    $default  reduce using rule 87 (subroutine_call)
+
+
+State 142
+
+   86 subroutine_call: IDENT LPAREN RPAREN .
+
+    $default  reduce using rule 86 (subroutine_call)
+
+
+State 143
+
+   88 subroutine_call: IDENT LPAREN expression_list . RPAREN
+   89                | IDENT LPAREN expression_list . error
+   91 expression_list: expression_list . COMMA expression
+
+    error   shift, and go to state 198
+    COMMA   shift, and go to state 196
+    RPAREN  shift, and go to state 199
+
+
+State 144
+
+  157 variable: IDENT arrayvar recvar .
+
+    $default  reduce using rule 157 (variable)
+
+
+State 145
+
+   85 assignment_statement: variable error $@13 . expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 200
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 146
+
+   83 assignment_statement: variable ASGN expression .
+
+    $default  reduce using rule 83 (assignment_statement)
+
+
+State 147
+
+   38 function_decl: FUNCTION IDENT LPAREN error $@9 . simple_type decl_part body
+
+    BOOL   shift, and go to state 29
+    FLOAT  shift, and go to state 30
+    INT    shift, and go to state 31
+
+    simple_type  go to state 201
+
+
+State 148
+
+   48 ident_list_amp: AMP IDENT .
+   49               | AMP IDENT . error
+
+    error  shift, and go to state 202
+
+    COLON  reduce using rule 48 (ident_list_amp)
+    COMMA  reduce using rule 48 (ident_list_amp)
+
+
+State 149
+
+   40 function_decl: FUNCTION IDENT LPAREN RPAREN error . $@10 simple_type decl_part body
+
+    $default  reduce using rule 39 ($@10)
+
+    $@10  go to state 203
+
+
+State 150
+
+   34 function_decl: FUNCTION IDENT LPAREN RPAREN COLON . simple_type decl_part body
+   36              | FUNCTION IDENT LPAREN RPAREN COLON . error $@8 decl_part body
+
+    error  shift, and go to state 204
+    BOOL   shift, and go to state 29
+    FLOAT  shift, and go to state 30
+    INT    shift, and go to state 31
+
+    simple_type  go to state 205
+
+
+State 151
+
+   47 ident_list_amp: IDENT error .
+
+    $default  reduce using rule 47 (ident_list_amp)
+
+
+State 152
+
+   31 function_decl: FUNCTION IDENT LPAREN parameter_list error . $@6 simple_type decl_part body
+
+    $default  reduce using rule 30 ($@6)
+
+    $@6  go to state 206
+
+
+State 153
+
+   27 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN . COLON simple_type decl_part body
+   29              | FUNCTION IDENT LPAREN parameter_list RPAREN . COLON error $@5 decl_part body
+   33              | FUNCTION IDENT LPAREN parameter_list RPAREN . error $@7 simple_type decl_part body
+
+    error  shift, and go to state 207
+    COLON  shift, and go to state 208
+
+
+State 154
+
+   42 parameter_list: ident_list_amp COLON . parameter_type parameter_list_list
+
+    BOOL   shift, and go to state 29
+    FLOAT  shift, and go to state 30
+    INT    shift, and go to state 31
+    IDENT  shift, and go to state 209
+
+    parameter_type  go to state 210
+    simple_type     go to state 211
+
+
+State 155
+
+   50 ident_list_amp: ident_list_amp COMMA . IDENT
+   51               | ident_list_amp COMMA . AMP IDENT
+
+    AMP    shift, and go to state 212
+    IDENT  shift, and go to state 213
+
+
+State 156
+
+   25 procedure_decl: PROCEDURE IDENT LPAREN error $@4 . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 214
+
+
+State 157
+
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+   23 procedure_decl: PROCEDURE IDENT LPAREN RPAREN decl_part . body
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 215
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 158
+
+   22 procedure_decl: PROCEDURE IDENT LPAREN parameter_list error . $@3 decl_part body
+
+    $default  reduce using rule 21 ($@3)
+
+    $@3  go to state 216
+
+
+State 159
+
+   20 procedure_decl: PROCEDURE IDENT LPAREN parameter_list RPAREN . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 217
+
+
+State 160
+
+   16 variable_decl: IDENT error $@2 ASGN type .
+
+    $default  reduce using rule 16 (variable_decl)
+
+
+State 161
+
+   66 index: ICONST error . $@12 ICONST index_list
+
+    $default  reduce using rule 65 ($@12)
+
+    $@12  go to state 218
+
+
+State 162
+
+   64 index: ICONST COLON . ICONST index_list
+
+    ICONST  shift, and go to state 219
+
+
+State 163
+
+   59 type: ARRAY LBRACK index error . $@11 OF type
+
+    $default  reduce using rule 58 ($@11)
+
+    $@11  go to state 220
+
+
+State 164
+
+   56 type: ARRAY LBRACK index RBRACK . OF type
+   57     | ARRAY LBRACK index RBRACK . OF error
+
+    OF  shift, and go to state 221
+
+
+State 165
+
+   70 field_list: ident_list COLON type . field_list_list
+
+    IDENT  shift, and go to state 63
+
+    $default  reduce using rule 72 (field_list_list)
+
+    ident_list       go to state 64
+    field_list       go to state 166
+    field_list_list  go to state 222
+
+
+State 166
+
+   73 field_list_list: field_list .
+
+    $default  reduce using rule 73 (field_list_list)
+
+
+State 167
+
+   71 field_list: ident_list type field_list_list .
+
+    $default  reduce using rule 71 (field_list)
+
+
+State 168
+
+   98 for_statement: FOR error $@15 IN . expression COLON expression statement_list END
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 223
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 169
+
+   93 for_statement: FOR IDENT IN expression . COLON expression statement_list END
+   94              | FOR IDENT IN expression . COLON expression statement_list error
+   96              | FOR IDENT IN expression . error $@14 expression statement_list END
+
+    error  shift, and go to state 224
+    COLON  shift, and go to state 225
+
+
+State 170
+
+  105 if_statement: IF LPAREN expression error . $@17 THEN statement_list END
+
+    $default  reduce using rule 104 ($@17)
+
+    $@17  go to state 226
+
+
+State 171
+
+  103 if_statement: IF LPAREN expression RPAREN . THEN statement_list END
+  106             | IF LPAREN expression RPAREN . THEN statement_list error
+  107             | IF LPAREN expression RPAREN . THEN statement_list elif_part END
+  108             | IF LPAREN expression RPAREN . THEN statement_list elif_part error
+  109             | IF LPAREN expression RPAREN . THEN statement_list else_part END
+  110             | IF LPAREN expression RPAREN . THEN statement_list else_part error
+  111             | IF LPAREN expression RPAREN . THEN statement_list elif_part else_part END
+  112             | IF LPAREN expression RPAREN . THEN statement_list elif_part else_part error
+
+    THEN  shift, and go to state 227
+
+
+State 172
+
+  123 expression_comma_list: COMMA . expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 228
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 173
+
+  124 expression_comma_list: expression_comma_list . COMMA expression
+  125 read_statement: READ LPAREN SCONST expression_comma_list . RPAREN
+  126               | READ LPAREN SCONST expression_comma_list . error
+
+    error   shift, and go to state 229
+    COMMA   shift, and go to state 230
+    RPAREN  shift, and go to state 231
+
+
+State 174
+
+  152 factor: LPAREN expression RPAREN .
+
+    $default  reduce using rule 152 (factor)
+
+
+State 175
+
+  128 expression: and_expression DBAR and_expression .
+
+    $default  reduce using rule 128 (expression)
+
+
+State 176
+
+  130 and_expression: logic_expression DAMP logic_expression .
+
+    $default  reduce using rule 130 (and_expression)
+
+
+State 177
+
+  134 logic_expression: simple_expression EQ simple_expression .
+  138 simple_expression: simple_expression . PLUS term
+  139                  | simple_expression . MINUS term
+
+    MINUS  shift, and go to state 127
+    PLUS   shift, and go to state 129
+
+    $default  reduce using rule 134 (logic_expression)
+
+
+State 178
+
+  136 logic_expression: simple_expression GE simple_expression .
+  138 simple_expression: simple_expression . PLUS term
+  139                  | simple_expression . MINUS term
+
+    MINUS  shift, and go to state 127
+    PLUS   shift, and go to state 129
+
+    $default  reduce using rule 136 (logic_expression)
+
+
+State 179
+
+  137 logic_expression: simple_expression GT simple_expression .
+  138 simple_expression: simple_expression . PLUS term
+  139                  | simple_expression . MINUS term
+
+    MINUS  shift, and go to state 127
+    PLUS   shift, and go to state 129
+
+    $default  reduce using rule 137 (logic_expression)
+
+
+State 180
+
+  133 logic_expression: simple_expression LE simple_expression .
+  138 simple_expression: simple_expression . PLUS term
+  139                  | simple_expression . MINUS term
+
+    MINUS  shift, and go to state 127
+    PLUS   shift, and go to state 129
+
+    $default  reduce using rule 133 (logic_expression)
+
+
+State 181
+
+  132 logic_expression: simple_expression LT simple_expression .
+  138 simple_expression: simple_expression . PLUS term
+  139                  | simple_expression . MINUS term
+
+    MINUS  shift, and go to state 127
+    PLUS   shift, and go to state 129
+
+    $default  reduce using rule 132 (logic_expression)
+
+
+State 182
+
+  139 simple_expression: simple_expression MINUS term .
+
+    $default  reduce using rule 139 (simple_expression)
+
+
+State 183
+
+  135 logic_expression: simple_expression NE simple_expression .
+  138 simple_expression: simple_expression . PLUS term
+  139                  | simple_expression . MINUS term
+
+    MINUS  shift, and go to state 127
+    PLUS   shift, and go to state 129
+
+    $default  reduce using rule 135 (logic_expression)
+
+
+State 184
+
+  138 simple_expression: simple_expression PLUS term .
+
+    $default  reduce using rule 138 (simple_expression)
+
+
+State 185
+
+  146 factor_list: DIV factor .
+
+    $default  reduce using rule 146 (factor_list)
+
+
+State 186
+
+  145 factor_list: STAR factor .
+
+    $default  reduce using rule 145 (factor_list)
+
+
+State 187
+
+  148 factor_list: factor_list DIV . factor
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call  go to state 78
+    factor           go to state 232
+    variable         go to state 85
+    constant         go to state 86
+
+
+State 188
+
+  147 factor_list: factor_list STAR . factor
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call  go to state 78
+    factor           go to state 233
+    variable         go to state 85
+    constant         go to state 86
+
+
+State 189
+
+  102 while_statement: WHILE LPAREN expression error . $@16 statement_list END
+
+    $default  reduce using rule 101 ($@16)
+
+    $@16  go to state 234
+
+
+State 190
+
+   99 while_statement: WHILE LPAREN expression RPAREN . statement_list END
+  100                | WHILE LPAREN expression RPAREN . statement_list error
+
+    $default  reduce using rule 74 (statement_list)
+
+    statement_list  go to state 235
+
+
+State 191
+
+  120 write_statement: WRITE LPAREN SCONST error .
+
+    $default  reduce using rule 120 (write_statement)
+
+
+State 192
+
+  119 write_statement: WRITE LPAREN SCONST RPAREN .
+
+    $default  reduce using rule 119 (write_statement)
+
+
+State 193
+
+  121 write_statement: WRITE LPAREN SCONST expression_comma_list . RPAREN
+  122                | WRITE LPAREN SCONST expression_comma_list . error
+  124 expression_comma_list: expression_comma_list . COMMA expression
+
+    error   shift, and go to state 236
+    COMMA   shift, and go to state 230
+    RPAREN  shift, and go to state 237
+
+
+State 194
+
+  162 variable_list: recvar variable .
+
+    $default  reduce using rule 162 (variable_list)
+
+
+State 195
+
+  159 arrayvar: LBRACK expression_list error .
+
+    $default  reduce using rule 159 (arrayvar)
+
+
+State 196
+
+   91 expression_list: expression_list COMMA . expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 238
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 197
+
+  158 arrayvar: LBRACK expression_list RBRACK .
+
+    $default  reduce using rule 158 (arrayvar)
+
+
+State 198
+
+   89 subroutine_call: IDENT LPAREN expression_list error .
+
+    $default  reduce using rule 89 (subroutine_call)
+
+
+State 199
+
+   88 subroutine_call: IDENT LPAREN expression_list RPAREN .
+
+    $default  reduce using rule 88 (subroutine_call)
+
+
+State 200
+
+   85 assignment_statement: variable error $@13 expression .
+
+    $default  reduce using rule 85 (assignment_statement)
+
+
+State 201
+
+   38 function_decl: FUNCTION IDENT LPAREN error $@9 simple_type . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 239
+
+
+State 202
+
+   49 ident_list_amp: AMP IDENT error .
+
+    $default  reduce using rule 49 (ident_list_amp)
+
+
+State 203
+
+   40 function_decl: FUNCTION IDENT LPAREN RPAREN error $@10 . simple_type decl_part body
+
+    BOOL   shift, and go to state 29
+    FLOAT  shift, and go to state 30
+    INT    shift, and go to state 31
+
+    simple_type  go to state 240
+
+
+State 204
+
+   36 function_decl: FUNCTION IDENT LPAREN RPAREN COLON error . $@8 decl_part body
+
+    $default  reduce using rule 35 ($@8)
+
+    $@8  go to state 241
+
+
+State 205
+
+   34 function_decl: FUNCTION IDENT LPAREN RPAREN COLON simple_type . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 242
+
+
+State 206
+
+   31 function_decl: FUNCTION IDENT LPAREN parameter_list error $@6 . simple_type decl_part body
+
+    BOOL   shift, and go to state 29
+    FLOAT  shift, and go to state 30
+    INT    shift, and go to state 31
+
+    simple_type  go to state 243
+
+
+State 207
+
+   33 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN error . $@7 simple_type decl_part body
+
+    $default  reduce using rule 32 ($@7)
+
+    $@7  go to state 244
+
+
+State 208
+
+   27 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN COLON . simple_type decl_part body
+   29              | FUNCTION IDENT LPAREN parameter_list RPAREN COLON . error $@5 decl_part body
+
+    error  shift, and go to state 245
+    BOOL   shift, and go to state 29
+    FLOAT  shift, and go to state 30
+    INT    shift, and go to state 31
+
+    simple_type  go to state 246
+
+
+State 209
+
+   53 parameter_type: IDENT .
+
+    $default  reduce using rule 53 (parameter_type)
+
+
+State 210
+
+   42 parameter_list: ident_list_amp COLON parameter_type . parameter_list_list
+
+    AMP    shift, and go to state 97
+    SEMI   shift, and go to state 247
+    IDENT  shift, and go to state 99
+
+    $default  reduce using rule 43 (parameter_list_list)
+
+    parameter_list       go to state 248
+    parameter_list_list  go to state 249
+    ident_list_amp       go to state 101
+
+
+State 211
+
+   52 parameter_type: simple_type .
+
+    $default  reduce using rule 52 (parameter_type)
+
+
+State 212
+
+   51 ident_list_amp: ident_list_amp COMMA AMP . IDENT
+
+    IDENT  shift, and go to state 250
+
+
+State 213
+
+   50 ident_list_amp: ident_list_amp COMMA IDENT .
+
+    $default  reduce using rule 50 (ident_list_amp)
+
+
+State 214
+
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+   25 procedure_decl: PROCEDURE IDENT LPAREN error $@4 decl_part . body
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 251
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 215
+
+   23 procedure_decl: PROCEDURE IDENT LPAREN RPAREN decl_part body .
+
+    $default  reduce using rule 23 (procedure_decl)
+
+
+State 216
+
+   22 procedure_decl: PROCEDURE IDENT LPAREN parameter_list error $@3 . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 252
+
+
+State 217
+
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+   20 procedure_decl: PROCEDURE IDENT LPAREN parameter_list RPAREN decl_part . body
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 253
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 218
+
+   66 index: ICONST error $@12 . ICONST index_list
+
+    ICONST  shift, and go to state 254
+
+
+State 219
+
+   64 index: ICONST COLON ICONST . index_list
+
+    COMMA   shift, and go to state 255
+    ICONST  shift, and go to state 106
+
+    $default  reduce using rule 67 (index_list)
+
+    index       go to state 256
+    index_list  go to state 257
+
+
+State 220
+
+   59 type: ARRAY LBRACK index error $@11 . OF type
+
+    OF  shift, and go to state 258
+
+
+State 221
+
+   56 type: ARRAY LBRACK index RBRACK OF . type
+   57     | ARRAY LBRACK index RBRACK OF . error
+
+    error   shift, and go to state 259
+    ARRAY   shift, and go to state 28
+    BOOL    shift, and go to state 29
+    FLOAT   shift, and go to state 30
+    INT     shift, and go to state 31
+    RECORD  shift, and go to state 32
+    IDENT   shift, and go to state 33
+
+    type         go to state 260
+    simple_type  go to state 35
+
+
+State 222
+
+   70 field_list: ident_list COLON type field_list_list .
+
+    $default  reduce using rule 70 (field_list)
+
+
+State 223
+
+   98 for_statement: FOR error $@15 IN expression . COLON expression statement_list END
+
+    COLON  shift, and go to state 261
+
+
+State 224
+
+   96 for_statement: FOR IDENT IN expression error . $@14 expression statement_list END
+
+    $default  reduce using rule 95 ($@14)
+
+    $@14  go to state 262
+
+
+State 225
+
+   93 for_statement: FOR IDENT IN expression COLON . expression statement_list END
+   94              | FOR IDENT IN expression COLON . expression statement_list error
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 263
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 226
+
+  105 if_statement: IF LPAREN expression error $@17 . THEN statement_list END
+
+    THEN  shift, and go to state 264
+
+
+State 227
+
+  103 if_statement: IF LPAREN expression RPAREN THEN . statement_list END
+  106             | IF LPAREN expression RPAREN THEN . statement_list error
+  107             | IF LPAREN expression RPAREN THEN . statement_list elif_part END
+  108             | IF LPAREN expression RPAREN THEN . statement_list elif_part error
+  109             | IF LPAREN expression RPAREN THEN . statement_list else_part END
+  110             | IF LPAREN expression RPAREN THEN . statement_list else_part error
+  111             | IF LPAREN expression RPAREN THEN . statement_list elif_part else_part END
+  112             | IF LPAREN expression RPAREN THEN . statement_list elif_part else_part error
+
+    $default  reduce using rule 74 (statement_list)
+
+    statement_list  go to state 265
+
+
+State 228
+
+  123 expression_comma_list: COMMA expression .
+
+    $default  reduce using rule 123 (expression_comma_list)
+
+
+State 229
+
+  126 read_statement: READ LPAREN SCONST expression_comma_list error .
+
+    $default  reduce using rule 126 (read_statement)
+
+
+State 230
+
+  124 expression_comma_list: expression_comma_list COMMA . expression
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 266
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 231
+
+  125 read_statement: READ LPAREN SCONST expression_comma_list RPAREN .
+
+    $default  reduce using rule 125 (read_statement)
+
+
+State 232
+
+  148 factor_list: factor_list DIV factor .
+
+    $default  reduce using rule 148 (factor_list)
+
+
+State 233
+
+  147 factor_list: factor_list STAR factor .
+
+    $default  reduce using rule 147 (factor_list)
+
+
+State 234
+
+  102 while_statement: WHILE LPAREN expression error $@16 . statement_list END
+
+    $default  reduce using rule 74 (statement_list)
+
+    statement_list  go to state 267
+
+
+State 235
+
+   75 statement_list: statement_list . assignment_statement
+   76               | statement_list . subroutine_call
+   77               | statement_list . return_statement
+   78               | statement_list . for_statement
+   79               | statement_list . while_statement
+   80               | statement_list . if_statement
+   81               | statement_list . read_statement
+   82               | statement_list . write_statement
+   99 while_statement: WHILE LPAREN expression RPAREN statement_list . END
+  100                | WHILE LPAREN expression RPAREN statement_list . error
+
+    error   shift, and go to state 268
+    END     shift, and go to state 269
+    FOR     shift, and go to state 38
+    IF      shift, and go to state 39
+    READ    shift, and go to state 40
+    RETURN  shift, and go to state 41
+    WHILE   shift, and go to state 42
+    WRITE   shift, and go to state 43
+    IDENT   shift, and go to state 44
+
+    assignment_statement  go to state 45
+    subroutine_call       go to state 46
+    return_statement      go to state 47
+    for_statement         go to state 48
+    while_statement       go to state 49
+    if_statement          go to state 50
+    write_statement       go to state 51
+    read_statement        go to state 52
+    variable              go to state 53
+
+
+State 236
+
+  122 write_statement: WRITE LPAREN SCONST expression_comma_list error .
+
+    $default  reduce using rule 122 (write_statement)
+
+
+State 237
+
+  121 write_statement: WRITE LPAREN SCONST expression_comma_list RPAREN .
+
+    $default  reduce using rule 121 (write_statement)
+
+
+State 238
+
+   91 expression_list: expression_list COMMA expression .
+
+    $default  reduce using rule 91 (expression_list)
+
+
+State 239
+
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+   38 function_decl: FUNCTION IDENT LPAREN error $@9 simple_type decl_part . body
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 270
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 240
+
+   40 function_decl: FUNCTION IDENT LPAREN RPAREN error $@10 simple_type . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 271
+
+
+State 241
+
+   36 function_decl: FUNCTION IDENT LPAREN RPAREN COLON error $@8 . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 272
+
+
+State 242
+
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+   34 function_decl: FUNCTION IDENT LPAREN RPAREN COLON simple_type decl_part . body
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 273
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 243
+
+   31 function_decl: FUNCTION IDENT LPAREN parameter_list error $@6 simple_type . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 274
+
+
+State 244
+
+   33 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN error $@7 . simple_type decl_part body
+
+    BOOL   shift, and go to state 29
+    FLOAT  shift, and go to state 30
+    INT    shift, and go to state 31
+
+    simple_type  go to state 275
+
+
+State 245
+
+   29 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN COLON error . $@5 decl_part body
+
+    $default  reduce using rule 28 ($@5)
+
+    $@5  go to state 276
+
+
+State 246
+
+   27 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN COLON simple_type . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 277
+
+
+State 247
+
+   44 parameter_list_list: SEMI . parameter_list
+
+    AMP    shift, and go to state 97
+    IDENT  shift, and go to state 99
+
+    parameter_list  go to state 278
+    ident_list_amp  go to state 101
+
+
+State 248
+
+   45 parameter_list_list: parameter_list .
+
+    $default  reduce using rule 45 (parameter_list_list)
+
+
+State 249
+
+   42 parameter_list: ident_list_amp COLON parameter_type parameter_list_list .
+
+    $default  reduce using rule 42 (parameter_list)
+
+
+State 250
+
+   51 ident_list_amp: ident_list_amp COMMA AMP IDENT .
+
+    $default  reduce using rule 51 (ident_list_amp)
+
+
+State 251
+
+   25 procedure_decl: PROCEDURE IDENT LPAREN error $@4 decl_part body .
+
+    $default  reduce using rule 25 (procedure_decl)
+
+
+State 252
+
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+   22 procedure_decl: PROCEDURE IDENT LPAREN parameter_list error $@3 decl_part . body
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 279
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 253
+
+   20 procedure_decl: PROCEDURE IDENT LPAREN parameter_list RPAREN decl_part body .
+
+    $default  reduce using rule 20 (procedure_decl)
+
+
+State 254
+
+   66 index: ICONST error $@12 ICONST . index_list
+
+    COMMA   shift, and go to state 255
+    ICONST  shift, and go to state 106
+
+    $default  reduce using rule 67 (index_list)
+
+    index       go to state 256
+    index_list  go to state 280
+
+
+State 255
+
+   68 index_list: COMMA . index
+
+    ICONST  shift, and go to state 106
+
+    index  go to state 281
+
+
+State 256
+
+   69 index_list: index .
+
+    $default  reduce using rule 69 (index_list)
+
+
+State 257
+
+   64 index: ICONST COLON ICONST index_list .
+
+    $default  reduce using rule 64 (index)
+
+
+State 258
+
+   59 type: ARRAY LBRACK index error $@11 OF . type
+
+    ARRAY   shift, and go to state 28
+    BOOL    shift, and go to state 29
+    FLOAT   shift, and go to state 30
+    INT     shift, and go to state 31
+    RECORD  shift, and go to state 32
+    IDENT   shift, and go to state 33
+
+    type         go to state 282
+    simple_type  go to state 35
+
+
+State 259
+
+   57 type: ARRAY LBRACK index RBRACK OF error .
+
+    $default  reduce using rule 57 (type)
+
+
+State 260
+
+   56 type: ARRAY LBRACK index RBRACK OF type .
+
+    $default  reduce using rule 56 (type)
+
+
+State 261
+
+   98 for_statement: FOR error $@15 IN expression COLON . expression statement_list END
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 283
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 262
+
+   96 for_statement: FOR IDENT IN expression error $@14 . expression statement_list END
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 284
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 263
+
+   93 for_statement: FOR IDENT IN expression COLON expression . statement_list END
+   94              | FOR IDENT IN expression COLON expression . statement_list error
+
+    $default  reduce using rule 74 (statement_list)
+
+    statement_list  go to state 285
+
+
+State 264
+
+  105 if_statement: IF LPAREN expression error $@17 THEN . statement_list END
+
+    $default  reduce using rule 74 (statement_list)
+
+    statement_list  go to state 286
+
+
+State 265
+
+   75 statement_list: statement_list . assignment_statement
+   76               | statement_list . subroutine_call
+   77               | statement_list . return_statement
+   78               | statement_list . for_statement
+   79               | statement_list . while_statement
+   80               | statement_list . if_statement
+   81               | statement_list . read_statement
+   82               | statement_list . write_statement
+  103 if_statement: IF LPAREN expression RPAREN THEN statement_list . END
+  106             | IF LPAREN expression RPAREN THEN statement_list . error
+  107             | IF LPAREN expression RPAREN THEN statement_list . elif_part END
+  108             | IF LPAREN expression RPAREN THEN statement_list . elif_part error
+  109             | IF LPAREN expression RPAREN THEN statement_list . else_part END
+  110             | IF LPAREN expression RPAREN THEN statement_list . else_part error
+  111             | IF LPAREN expression RPAREN THEN statement_list . elif_part else_part END
+  112             | IF LPAREN expression RPAREN THEN statement_list . elif_part else_part error
+
+    error   shift, and go to state 287
+    ELSE    shift, and go to state 288
+    ELIF    shift, and go to state 289
+    END     shift, and go to state 290
+    FOR     shift, and go to state 38
+    IF      shift, and go to state 39
+    READ    shift, and go to state 40
+    RETURN  shift, and go to state 41
+    WHILE   shift, and go to state 42
+    WRITE   shift, and go to state 43
+    IDENT   shift, and go to state 44
+
+    assignment_statement  go to state 45
+    subroutine_call       go to state 46
+    return_statement      go to state 47
+    for_statement         go to state 48
+    while_statement       go to state 49
+    if_statement          go to state 50
+    else_part             go to state 291
+    elif_part             go to state 292
+    write_statement       go to state 51
+    read_statement        go to state 52
+    variable              go to state 53
+
+
+State 266
+
+  124 expression_comma_list: expression_comma_list COMMA expression .
+
+    $default  reduce using rule 124 (expression_comma_list)
+
+
+State 267
+
+   75 statement_list: statement_list . assignment_statement
+   76               | statement_list . subroutine_call
+   77               | statement_list . return_statement
+   78               | statement_list . for_statement
+   79               | statement_list . while_statement
+   80               | statement_list . if_statement
+   81               | statement_list . read_statement
+   82               | statement_list . write_statement
+  102 while_statement: WHILE LPAREN expression error $@16 statement_list . END
+
+    END     shift, and go to state 293
+    FOR     shift, and go to state 38
+    IF      shift, and go to state 39
+    READ    shift, and go to state 40
+    RETURN  shift, and go to state 41
+    WHILE   shift, and go to state 42
+    WRITE   shift, and go to state 43
+    IDENT   shift, and go to state 44
+
+    assignment_statement  go to state 45
+    subroutine_call       go to state 46
+    return_statement      go to state 47
+    for_statement         go to state 48
+    while_statement       go to state 49
+    if_statement          go to state 50
+    write_statement       go to state 51
+    read_statement        go to state 52
+    variable              go to state 53
+
+
+State 268
+
+  100 while_statement: WHILE LPAREN expression RPAREN statement_list error .
+
+    $default  reduce using rule 100 (while_statement)
+
+
+State 269
+
+   99 while_statement: WHILE LPAREN expression RPAREN statement_list END .
+
+    $default  reduce using rule 99 (while_statement)
+
+
+State 270
+
+   38 function_decl: FUNCTION IDENT LPAREN error $@9 simple_type decl_part body .
+
+    $default  reduce using rule 38 (function_decl)
+
+
+State 271
+
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+   40 function_decl: FUNCTION IDENT LPAREN RPAREN error $@10 simple_type decl_part . body
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 294
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 272
+
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+   36 function_decl: FUNCTION IDENT LPAREN RPAREN COLON error $@8 decl_part . body
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 295
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 273
+
+   34 function_decl: FUNCTION IDENT LPAREN RPAREN COLON simple_type decl_part body .
+
+    $default  reduce using rule 34 (function_decl)
+
+
+State 274
+
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+   31 function_decl: FUNCTION IDENT LPAREN parameter_list error $@6 simple_type decl_part . body
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 296
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 275
+
+   33 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN error $@7 simple_type . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 297
+
+
+State 276
+
+   29 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN COLON error $@5 . decl_part body
+
+    $default  reduce using rule 6 (decl_part)
+
+    decl_part  go to state 298
+
+
+State 277
+
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+   27 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN COLON simple_type decl_part . body
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 299
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 278
+
+   44 parameter_list_list: SEMI parameter_list .
+
+    $default  reduce using rule 44 (parameter_list_list)
+
+
+State 279
+
+   22 procedure_decl: PROCEDURE IDENT LPAREN parameter_list error $@3 decl_part body .
+
+    $default  reduce using rule 22 (procedure_decl)
+
+
+State 280
+
+   66 index: ICONST error $@12 ICONST index_list .
+
+    $default  reduce using rule 66 (index)
+
+
+State 281
+
+   68 index_list: COMMA index .
+
+    $default  reduce using rule 68 (index_list)
+
+
+State 282
+
+   59 type: ARRAY LBRACK index error $@11 OF type .
+
+    $default  reduce using rule 59 (type)
+
+
+State 283
+
+   98 for_statement: FOR error $@15 IN expression COLON expression . statement_list END
+
+    $default  reduce using rule 74 (statement_list)
+
+    statement_list  go to state 300
+
+
+State 284
+
+   96 for_statement: FOR IDENT IN expression error $@14 expression . statement_list END
+
+    $default  reduce using rule 74 (statement_list)
+
+    statement_list  go to state 301
+
+
+State 285
+
+   75 statement_list: statement_list . assignment_statement
+   76               | statement_list . subroutine_call
+   77               | statement_list . return_statement
+   78               | statement_list . for_statement
+   79               | statement_list . while_statement
+   80               | statement_list . if_statement
+   81               | statement_list . read_statement
+   82               | statement_list . write_statement
+   93 for_statement: FOR IDENT IN expression COLON expression statement_list . END
+   94              | FOR IDENT IN expression COLON expression statement_list . error
+
+    error   shift, and go to state 302
+    END     shift, and go to state 303
+    FOR     shift, and go to state 38
+    IF      shift, and go to state 39
+    READ    shift, and go to state 40
+    RETURN  shift, and go to state 41
+    WHILE   shift, and go to state 42
+    WRITE   shift, and go to state 43
+    IDENT   shift, and go to state 44
+
+    assignment_statement  go to state 45
+    subroutine_call       go to state 46
+    return_statement      go to state 47
+    for_statement         go to state 48
+    while_statement       go to state 49
+    if_statement          go to state 50
+    write_statement       go to state 51
+    read_statement        go to state 52
+    variable              go to state 53
+
+
+State 286
+
+   75 statement_list: statement_list . assignment_statement
+   76               | statement_list . subroutine_call
+   77               | statement_list . return_statement
+   78               | statement_list . for_statement
+   79               | statement_list . while_statement
+   80               | statement_list . if_statement
+   81               | statement_list . read_statement
+   82               | statement_list . write_statement
+  105 if_statement: IF LPAREN expression error $@17 THEN statement_list . END
+
+    END     shift, and go to state 304
+    FOR     shift, and go to state 38
+    IF      shift, and go to state 39
+    READ    shift, and go to state 40
+    RETURN  shift, and go to state 41
+    WHILE   shift, and go to state 42
+    WRITE   shift, and go to state 43
+    IDENT   shift, and go to state 44
+
+    assignment_statement  go to state 45
+    subroutine_call       go to state 46
+    return_statement      go to state 47
+    for_statement         go to state 48
+    while_statement       go to state 49
+    if_statement          go to state 50
+    write_statement       go to state 51
+    read_statement        go to state 52
+    variable              go to state 53
+
+
+State 287
+
+  106 if_statement: IF LPAREN expression RPAREN THEN statement_list error .
+
+    $default  reduce using rule 106 (if_statement)
+
+
+State 288
+
+  113 else_part: ELSE . statement_list
+
+    $default  reduce using rule 74 (statement_list)
+
+    statement_list  go to state 305
+
+
+State 289
+
+  114 elif_part: ELIF . LPAREN expression RPAREN THEN statement_list elif_part_list
+  116          | ELIF . LPAREN expression error $@18 THEN statement_list elif_part_list
+
+    LPAREN  shift, and go to state 306
+
+
+State 290
+
+  103 if_statement: IF LPAREN expression RPAREN THEN statement_list END .
+
+    $default  reduce using rule 103 (if_statement)
+
+
+State 291
+
+  109 if_statement: IF LPAREN expression RPAREN THEN statement_list else_part . END
+  110             | IF LPAREN expression RPAREN THEN statement_list else_part . error
+
+    error  shift, and go to state 307
+    END    shift, and go to state 308
+
+
+State 292
+
+  107 if_statement: IF LPAREN expression RPAREN THEN statement_list elif_part . END
+  108             | IF LPAREN expression RPAREN THEN statement_list elif_part . error
+  111             | IF LPAREN expression RPAREN THEN statement_list elif_part . else_part END
+  112             | IF LPAREN expression RPAREN THEN statement_list elif_part . else_part error
+
+    error  shift, and go to state 309
+    ELSE   shift, and go to state 288
+    END    shift, and go to state 310
+
+    else_part  go to state 311
+
+
+State 293
+
+  102 while_statement: WHILE LPAREN expression error $@16 statement_list END .
+
+    $default  reduce using rule 102 (while_statement)
+
+
+State 294
+
+   40 function_decl: FUNCTION IDENT LPAREN RPAREN error $@10 simple_type decl_part body .
+
+    $default  reduce using rule 40 (function_decl)
+
+
+State 295
+
+   36 function_decl: FUNCTION IDENT LPAREN RPAREN COLON error $@8 decl_part body .
+
+    $default  reduce using rule 36 (function_decl)
+
+
+State 296
+
+   31 function_decl: FUNCTION IDENT LPAREN parameter_list error $@6 simple_type decl_part body .
+
+    $default  reduce using rule 31 (function_decl)
+
+
+State 297
+
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+   33 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN error $@7 simple_type decl_part . body
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 312
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 298
+
+    7 decl_part: decl_part . variable_decl
+    8          | decl_part . procedure_decl
+    9          | decl_part . function_decl
+   29 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN COLON error $@5 decl_part . body
+
+    BEGINN     shift, and go to state 9
+    FUNCTION   shift, and go to state 10
+    PROCEDURE  shift, and go to state 11
+    IDENT      shift, and go to state 12
+
+    body            go to state 313
+    variable_decl   go to state 14
+    ident_list      go to state 15
+    procedure_decl  go to state 16
+    function_decl   go to state 17
+
+
+State 299
+
+   27 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN COLON simple_type decl_part body .
+
+    $default  reduce using rule 27 (function_decl)
+
+
+State 300
+
+   75 statement_list: statement_list . assignment_statement
+   76               | statement_list . subroutine_call
+   77               | statement_list . return_statement
+   78               | statement_list . for_statement
+   79               | statement_list . while_statement
+   80               | statement_list . if_statement
+   81               | statement_list . read_statement
+   82               | statement_list . write_statement
+   98 for_statement: FOR error $@15 IN expression COLON expression statement_list . END
+
+    END     shift, and go to state 314
+    FOR     shift, and go to state 38
+    IF      shift, and go to state 39
+    READ    shift, and go to state 40
+    RETURN  shift, and go to state 41
+    WHILE   shift, and go to state 42
+    WRITE   shift, and go to state 43
+    IDENT   shift, and go to state 44
+
+    assignment_statement  go to state 45
+    subroutine_call       go to state 46
+    return_statement      go to state 47
+    for_statement         go to state 48
+    while_statement       go to state 49
+    if_statement          go to state 50
+    write_statement       go to state 51
+    read_statement        go to state 52
+    variable              go to state 53
+
+
+State 301
+
+   75 statement_list: statement_list . assignment_statement
+   76               | statement_list . subroutine_call
+   77               | statement_list . return_statement
+   78               | statement_list . for_statement
+   79               | statement_list . while_statement
+   80               | statement_list . if_statement
+   81               | statement_list . read_statement
+   82               | statement_list . write_statement
+   96 for_statement: FOR IDENT IN expression error $@14 expression statement_list . END
+
+    END     shift, and go to state 315
+    FOR     shift, and go to state 38
+    IF      shift, and go to state 39
+    READ    shift, and go to state 40
+    RETURN  shift, and go to state 41
+    WHILE   shift, and go to state 42
+    WRITE   shift, and go to state 43
+    IDENT   shift, and go to state 44
+
+    assignment_statement  go to state 45
+    subroutine_call       go to state 46
+    return_statement      go to state 47
+    for_statement         go to state 48
+    while_statement       go to state 49
+    if_statement          go to state 50
+    write_statement       go to state 51
+    read_statement        go to state 52
+    variable              go to state 53
+
+
+State 302
+
+   94 for_statement: FOR IDENT IN expression COLON expression statement_list error .
+
+    $default  reduce using rule 94 (for_statement)
+
+
+State 303
+
+   93 for_statement: FOR IDENT IN expression COLON expression statement_list END .
+
+    $default  reduce using rule 93 (for_statement)
+
+
+State 304
+
+  105 if_statement: IF LPAREN expression error $@17 THEN statement_list END .
+
+    $default  reduce using rule 105 (if_statement)
+
+
+State 305
+
+   75 statement_list: statement_list . assignment_statement
+   76               | statement_list . subroutine_call
+   77               | statement_list . return_statement
+   78               | statement_list . for_statement
+   79               | statement_list . while_statement
+   80               | statement_list . if_statement
+   81               | statement_list . read_statement
+   82               | statement_list . write_statement
+  113 else_part: ELSE statement_list .
+
+    FOR     shift, and go to state 38
+    IF      shift, and go to state 39
+    READ    shift, and go to state 40
+    RETURN  shift, and go to state 41
+    WHILE   shift, and go to state 42
+    WRITE   shift, and go to state 43
+    IDENT   shift, and go to state 44
+
+    $default  reduce using rule 113 (else_part)
+
+    assignment_statement  go to state 45
+    subroutine_call       go to state 46
+    return_statement      go to state 47
+    for_statement         go to state 48
+    while_statement       go to state 49
+    if_statement          go to state 50
+    write_statement       go to state 51
+    read_statement        go to state 52
+    variable              go to state 53
+
+
+State 306
+
+  114 elif_part: ELIF LPAREN . expression RPAREN THEN statement_list elif_part_list
+  116          | ELIF LPAREN . expression error $@18 THEN statement_list elif_part_list
+
+    BANG    shift, and go to state 70
+    LPAREN  shift, and go to state 71
+    MINUS   shift, and go to state 72
+    PLUS    shift, and go to state 73
+    FALSE   shift, and go to state 74
+    TRUE    shift, and go to state 75
+    FCONST  shift, and go to state 76
+    ICONST  shift, and go to state 77
+    IDENT   shift, and go to state 44
+
+    subroutine_call    go to state 78
+    expression         go to state 316
+    and_expression     go to state 80
+    logic_expression   go to state 81
+    simple_expression  go to state 82
+    term               go to state 83
+    factor             go to state 84
+    variable           go to state 85
+    constant           go to state 86
+
+
+State 307
+
+  110 if_statement: IF LPAREN expression RPAREN THEN statement_list else_part error .
+
+    $default  reduce using rule 110 (if_statement)
+
+
+State 308
+
+  109 if_statement: IF LPAREN expression RPAREN THEN statement_list else_part END .
+
+    $default  reduce using rule 109 (if_statement)
+
+
+State 309
+
+  108 if_statement: IF LPAREN expression RPAREN THEN statement_list elif_part error .
+
+    $default  reduce using rule 108 (if_statement)
+
+
+State 310
+
+  107 if_statement: IF LPAREN expression RPAREN THEN statement_list elif_part END .
+
+    $default  reduce using rule 107 (if_statement)
+
+
+State 311
+
+  111 if_statement: IF LPAREN expression RPAREN THEN statement_list elif_part else_part . END
+  112             | IF LPAREN expression RPAREN THEN statement_list elif_part else_part . error
+
+    error  shift, and go to state 317
+    END    shift, and go to state 318
+
+
+State 312
+
+   33 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN error $@7 simple_type decl_part body .
+
+    $default  reduce using rule 33 (function_decl)
+
+
+State 313
+
+   29 function_decl: FUNCTION IDENT LPAREN parameter_list RPAREN COLON error $@5 decl_part body .
+
+    $default  reduce using rule 29 (function_decl)
+
+
+State 314
+
+   98 for_statement: FOR error $@15 IN expression COLON expression statement_list END .
+
+    $default  reduce using rule 98 (for_statement)
+
+
+State 315
+
+   96 for_statement: FOR IDENT IN expression error $@14 expression statement_list END .
+
+    $default  reduce using rule 96 (for_statement)
+
+
+State 316
+
+  114 elif_part: ELIF LPAREN expression . RPAREN THEN statement_list elif_part_list
+  116          | ELIF LPAREN expression . error $@18 THEN statement_list elif_part_list
+
+    error   shift, and go to state 319
+    RPAREN  shift, and go to state 320
+
+
+State 317
+
+  112 if_statement: IF LPAREN expression RPAREN THEN statement_list elif_part else_part error .
+
+    $default  reduce using rule 112 (if_statement)
+
+
+State 318
+
+  111 if_statement: IF LPAREN expression RPAREN THEN statement_list elif_part else_part END .
+
+    $default  reduce using rule 111 (if_statement)
+
+
+State 319
+
+  116 elif_part: ELIF LPAREN expression error . $@18 THEN statement_list elif_part_list
+
+    $default  reduce using rule 115 ($@18)
+
+    $@18  go to state 321
+
+
+State 320
+
+  114 elif_part: ELIF LPAREN expression RPAREN . THEN statement_list elif_part_list
+
+    THEN  shift, and go to state 322
+
+
+State 321
+
+  116 elif_part: ELIF LPAREN expression error $@18 . THEN statement_list elif_part_list
+
+    THEN  shift, and go to state 323
+
+
+State 322
+
+  114 elif_part: ELIF LPAREN expression RPAREN THEN . statement_list elif_part_list
+
+    $default  reduce using rule 74 (statement_list)
+
+    statement_list  go to state 324
+
+
+State 323
+
+  116 elif_part: ELIF LPAREN expression error $@18 THEN . statement_list elif_part_list
+
+    $default  reduce using rule 74 (statement_list)
+
+    statement_list  go to state 325
+
+
+State 324
+
+   75 statement_list: statement_list . assignment_statement
+   76               | statement_list . subroutine_call
+   77               | statement_list . return_statement
+   78               | statement_list . for_statement
+   79               | statement_list . while_statement
+   80               | statement_list . if_statement
+   81               | statement_list . read_statement
+   82               | statement_list . write_statement
+  114 elif_part: ELIF LPAREN expression RPAREN THEN statement_list . elif_part_list
+
+    ELIF    shift, and go to state 289
+    FOR     shift, and go to state 38
+    IF      shift, and go to state 39
+    READ    shift, and go to state 40
+    RETURN  shift, and go to state 41
+    WHILE   shift, and go to state 42
+    WRITE   shift, and go to state 43
+    IDENT   shift, and go to state 44
+
+    $default  reduce using rule 117 (elif_part_list)
+
+    assignment_statement  go to state 45
+    subroutine_call       go to state 46
+    return_statement      go to state 47
+    for_statement         go to state 48
+    while_statement       go to state 49
+    if_statement          go to state 50
+    elif_part             go to state 326
+    elif_part_list        go to state 327
+    write_statement       go to state 51
+    read_statement        go to state 52
+    variable              go to state 53
+
+
+State 325
+
+   75 statement_list: statement_list . assignment_statement
+   76               | statement_list . subroutine_call
+   77               | statement_list . return_statement
+   78               | statement_list . for_statement
+   79               | statement_list . while_statement
+   80               | statement_list . if_statement
+   81               | statement_list . read_statement
+   82               | statement_list . write_statement
+  116 elif_part: ELIF LPAREN expression error $@18 THEN statement_list . elif_part_list
+
+    ELIF    shift, and go to state 289
+    FOR     shift, and go to state 38
+    IF      shift, and go to state 39
+    READ    shift, and go to state 40
+    RETURN  shift, and go to state 41
+    WHILE   shift, and go to state 42
+    WRITE   shift, and go to state 43
+    IDENT   shift, and go to state 44
+
+    $default  reduce using rule 117 (elif_part_list)
+
+    assignment_statement  go to state 45
+    subroutine_call       go to state 46
+    return_statement      go to state 47
+    for_statement         go to state 48
+    while_statement       go to state 49
+    if_statement          go to state 50
+    elif_part             go to state 326
+    elif_part_list        go to state 328
+    write_statement       go to state 51
+    read_statement        go to state 52
+    variable              go to state 53
+
+
+State 326
+
+  118 elif_part_list: elif_part .
+
+    $default  reduce using rule 118 (elif_part_list)
+
+
+State 327
+
+  114 elif_part: ELIF LPAREN expression RPAREN THEN statement_list elif_part_list .
+
+    $default  reduce using rule 114 (elif_part)
+
+
+State 328
+
+  116 elif_part: ELIF LPAREN expression error $@18 THEN statement_list elif_part_list .
+
+    $default  reduce using rule 116 (elif_part)

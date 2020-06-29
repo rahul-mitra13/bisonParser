@@ -1,0 +1,89 @@
+/*
+ * scanner.l -- a lexical analyzer for P-
+ *
+ * <Your name>
+ * Department of Computer Science
+ * Trinity College
+ *
+ * Date:
+ * Modification History:
+ *
+ */
+
+%{
+
+#include "scanner.h"
+#define N 10000
+void modify(char a[], char b[]);
+
+%}
+
+D                        [0-9]
+ID                       ([a-zA-Z]|"_")([0-9]|[a-zA-Z]|"_")*
+%x                       STRING
+
+%%
+						
+                        struct he *phe;
+                        char msg[MAX_MSG_LEN];
+                        char ch;
+                        int ret;
+
+" "                     |
+"\t"                    |
+"\f"                    ;
+"\n"                    cLine++;
+array|ARRAY             return(ARRAY);
+                        
+["]                                {yymore(); BEGIN(STRING);}/*Strings*/
+<STRING>(\\.|[^"\\^\n])*           {yymore();}  /*Collect all escape characters and anything that's not a quote*/
+<STRING>(\n)                       {yymore(); cLine++;}
+<STRING>["]                        {
+                                        BEGIN(INITIAL);
+                                        char copy[N];
+                                        modify(yytext,copy);    
+                                        yylval.sb = MakeString(copy);
+                                        return(SCONST);
+                                    }
+
+ID     {
+                            if ((phe = Lookup(yytext)) == NULL) {
+                                phe = Insert(yytext);
+                                yylval.phe = phe;
+                            }
+                            return(IDENT);
+                        }
+
+.                       {
+                            sprintf(msg, message[mnUnknownChar], yytext[0]);
+                            PrintErrMsg(msg);
+                        }
+%%
+/* User routines go here */
+/*This is a function to handle escape characters in a string*
+*Parameters: char array a[] which is to be modified
+*Parameters: char array b[] which stores the modified string
+*Return type: void
+*/
+void modify(char a[], char b[]){
+    int i;
+    i = 0;
+    int k;
+    k = 0;
+    while ( a[i] != '\0'){
+        if ( a[i] == '\\' && a[i+1] == '\\'){/*If theres is an escape character for a backslash*/
+                b[k++] = '\\';
+                i = i + 2;
+         }
+         else if ( a[i] == '\\' && a[i + 1] == '"'){/*If there is an escape character for a quote*/
+                b[k++] = '"';
+                i = i + 2;
+         }
+         else{
+                b[k++] = a[i];
+                i++;
+        }
+   }
+   b[k] = '\0';
+}
+
