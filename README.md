@@ -1,7 +1,7 @@
 
 README
 
-This project uses flex and bison to parse code for the P- programming langauge. Identifier tokens are added to the symbol table by the flex scanner. Flex is used to return tokens and bison is used to implement grammar rules. The parser written with the help of bison is able to parse syntactically correct programs in the P- language. 
+This project uses flex and bison to parse code for the P- toy programming langauge. Identifier tokens are added to the symbol table by the flex scanner. Flex is used to return tokens and bison is used to implement grammar rules. The parser written with the help of bison is able to parse syntactically correct programs in the P- language. 
 
 On top of that, the parser also catches the following errors:
 
